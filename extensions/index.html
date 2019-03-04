@@ -1,0 +1,562 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Extensions &#8212; CityJSON 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="next" title="CityGML support" href="../citygmlsupport/" />
+    <link rel="prev" title="Software" href="../software/" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="extensions">
+<h1>Extensions<a class="headerlink" href="#extensions" title="Permalink to this headline">¶</a></h1>
+<blockquote class="highlights">
+<div>(version 0.9)</div></blockquote>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#cityjson-extensions" id="id22">CityJSON Extensions</a><ul>
+<li><a class="reference internal" href="#the-extension-file" id="id23">The Extension file</a></li>
+<li><a class="reference internal" href="#adding-new-complex-attributes-to-existing-city-objects" id="id24">1. Adding new complex attributes to existing City Objects</a></li>
+<li><a class="reference internal" href="#creating-extending-new-city-objects" id="id25">2. Creating/extending new City Objects</a></li>
+<li><a class="reference internal" href="#adding-new-properties-at-the-root-of-a-document" id="id26">3. Adding new properties at the root of a document</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mapping-of-the-noise-ade-to-a-cityjson-extension" id="id27">Mapping of the Noise ADE to a CityJSON Extension</a><ul>
+<li><a class="reference internal" href="#adding-new-attributes-to-buildings" id="id28">Adding new attributes to Buildings</a></li>
+<li><a class="reference internal" href="#adding-complex-types-for-cityfurniture" id="id29">Adding complex types for CityFurniture</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#validation-of-files-containing-extensions" id="id30">Validation of files containing extensions</a></li>
+</ul>
+</div>
+<p>The CityGML data model allows us to represent the most common city features, but sometimes practitioners may want to model additional features and/or add certain attributes to the data model.
+For this, CityGML has the concept of <a class="reference external" href="https://www.citygml.org/ade/">ADEs (Application Domain Extensions)</a>.
+An ADE is defined in an extra <a class="reference external" href="https://en.wikipedia.org/wiki/XML_schema/">XML Schema</a> (XSD file) with its own namespace, and often inheritance is used to refine the classes of the CityGML data model, to define entirely new classes, and to modify any class by adding for instance new geometries and complex attribute anywhere in a City Model.
+The ADE allows us to document in a structured way, and also to validate, an instance of a CityGML document that would contain both classes from the core model and from the ADEs.</p>
+<div class="section" id="cityjson-extensions">
+<h2><a class="toc-backref" href="#id22">CityJSON Extensions</a><a class="headerlink" href="#cityjson-extensions" title="Permalink to this headline">¶</a></h2>
+<p>CityJSON uses <a class="reference external" href="http://json-schema.org/">JSON Schemas</a> to document and validate the data model, schemas should be seen as basically validating the syntax of a JSON document.</p>
+<p>A CityJSON <em>Extension</em> is a JSON file that allows to document how the core data model of CityJSON may be extended, and to validate CityJSON files.</p>
+<p>The following 3 cases are possible:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Adding new complex attributes to existing City Objects</li>
+<li>Creating a new City Object, or “extending” one, and defining complex geometries</li>
+<li>Adding new properties at the root of a document</li>
+</ol>
+</div></blockquote>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p>While Extensions are less flexible than CityGML ADEs (inheritance and namespaces are for instance not supported, and less customisation is possible), it should be noted that the flexibility of ADEs comes at a price: the software processing an extended CityGML file will not necessarily know what structure to expect. There is ongoing work to use the ADE schemas to automatically do this, but this currently is not supported by most software. Viewers might not be affected by ADEs because the geometries are usually not changed by an ADE. However, software parsing the XML to extract attributes and features might not work directly (and thus specific code would need to be written).</p>
+<p class="last">CityJSON Extensions are designed such that they can be read and processed by standard CityJSON software, often no changes in the parsing code is required. This is achieved by enforcing a set of simple rules—as defined below—when adding new City Objects. If these are followed, then a CityJSON file containing Extensions will be seen as a ‘standard’ CityJSON file.</p>
+</div>
+<div class="section" id="the-extension-file">
+<h3><a class="toc-backref" href="#id23">The Extension file</a><a class="headerlink" href="#the-extension-file" title="Permalink to this headline">¶</a></h3>
+<p>A CityJSON Extension is defined in a separate JSON file such as this one:</p>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;CityJSON_Extension&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;name&quot;</span><span class="o">:</span> <span class="s2">&quot;Noise&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;uri&quot;</span><span class="o">:</span> <span class="s2">&quot;https://someurl.org/noise.json&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;version&quot;</span><span class="o">:</span> <span class="s2">&quot;0.1&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;description&quot;</span><span class="o">:</span> <span class="s2">&quot;Extension to model the noise&quot;</span>
+  <span class="s2">&quot;extraRootProperties&quot;</span><span class="o">:</span> <span class="p">{},</span>
+  <span class="s2">&quot;extraAttributes&quot;</span><span class="o">:</span> <span class="p">{},</span>
+  <span class="s2">&quot;extraCityObjects&quot;</span><span class="o">:</span> <span class="p">{}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>It must define the name of the Extension, its URI, and its version.
+The 3 cases to extend the core model, as described above, are 3 properties of the file.
+Each of these properties contain snippets of <a class="reference external" href="http://json-schema.org/">JSON Schemas</a>, as explained below.</p>
+<p>A CityJSON Extension file must be located in a folder <code class="docutils literal notranslate"><span class="pre">/extensions</span></code> in the folder where the schemas are. For a new extension <code class="docutils literal notranslate"><span class="pre">myextension.json</span></code> the following structure would result:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">appearance.json</span>
+<span class="go">cityjson.json</span>
+<span class="go">cityobjects.json</span>
+<span class="go">extensions</span>
+<span class="go">geomprimitives.json</span>
+<span class="go">geomtemplates.json</span>
+<span class="go">metadata.json</span>
+<span class="go">extensions/</span>
+<span class="go">    myextension.json</span>
+</pre></div>
+</div>
+<p>This also means that if an element of the Extension reuses or references structures defined in the schemas of CityJSON, then the relative path <code class="docutils literal notranslate"><span class="pre">../</span></code> must be used.
+An example would be to reuse the Solid type would be:</p>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;items&quot;</span><span class="o">:</span> <span class="p">{</span>
+  <span class="s2">&quot;oneOf&quot;</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;../geomprimitives.json#/Solid&quot;</span><span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-new-complex-attributes-to-existing-city-objects">
+<h3><a class="toc-backref" href="#id24">1. Adding new complex attributes to existing City Objects</a><a class="headerlink" href="#adding-new-complex-attributes-to-existing-city-objects" title="Permalink to this headline">¶</a></h3>
+<p>One of the philosophy of JSON is “schema-less”, which means that one is allowed to define new properties for the JSON objects without documenting them in a JSON schema (watch out: this does <em>not</em> mean that JSON cannot have schemas!).
+While this is in contrast to CityGML (and GML as a whole) where the schemas are central, the schemas of CityJSON (<a class="reference internal" href="../schema/"><span class="doc">Schema validation</span></a>) are partly following that philosophy.
+That is, for a given City Object, the “allowed” properties/attributes are listed in the schema, but it is not an error to add new ones.
+The validator of CityJSON (<a class="reference external" href="https://github.com/tudelft3d/cjio">cjio</a> with the option <code class="docutils literal notranslate"><span class="pre">--validate</span></code>) does more than simply validate a dataset against the schemas, and will return a <em>warning</em> if an attribute is not in the schema, but it is not considered invalid in CityJSON.</p>
+<p>In brief, if one wants to simply add a new attribute to a given <code class="docutils literal notranslate"><span class="pre">&quot;Building&quot;</span></code>, say to document its colour (<code class="docutils literal notranslate"><span class="pre">&quot;colour&quot;:</span> <span class="pre">&quot;red&quot;</span></code>), the easiest way is just to add a property to the City Object (notice that <code class="docutils literal notranslate"><span class="pre">&quot;storeysAboveGround&quot;</span></code> is in the CityJSON schema already):</p>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;Building&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;attributes&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;storeysAboveGround&quot;</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s2">&quot;colour&quot;</span><span class="o">:</span> <span class="s2">&quot;red&quot;</span>
+  <span class="p">},</span>
+  <span class="s2">&quot;geometry&quot;</span><span class="o">:</span> <span class="p">[...]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>It is also possible to add, and document in a schema, complex attributes, for example is we wanted to have the colour of the buildings as a RGBA value (red-green-blue-alpha):</p>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;Building&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;attributes&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;storeysAboveGround&quot;</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s2">&quot;+colour&quot;</span><span class="o">:</span> <span class="p">{</span>
+      <span class="s2">&quot;rgba&quot;</span><span class="o">:</span> <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="p">},</span>
+  <span class="p">},</span>
+  <span class="s2">&quot;geometry&quot;</span><span class="o">:</span> <span class="p">[...]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Another example would be to store the area of the parcel of a building, and to document also the unit of measurement:</p>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;Building&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;attributes&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;storeysAboveGround&quot;</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s2">&quot;+area-parcel&quot;</span><span class="o">:</span> <span class="p">{</span>
+      <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="mi">437</span><span class="p">,</span>
+      <span class="s2">&quot;uom&quot;</span><span class="o">:</span> <span class="s2">&quot;m2&quot;</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="s2">&quot;geometry&quot;</span><span class="o">:</span> <span class="p">[...]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For these 2 cases, the CityJSON Extension file would look like the snippet below.
+Notice that <code class="docutils literal notranslate"><span class="pre">&quot;extraAttributes&quot;</span></code> may have several properties (the types of the City Objects are the possibilities) and then each of these have as properties the new attributes (there can be several).
+An extra attribute must start with <code class="docutils literal notranslate"><span class="pre">+</span></code>; notice that it is good practice to preprend the attribute with the name of the Extension, to avoid that 2 attributes from 2 difference extensions have the same name.
+The value of the property is a JSON schema, this schema can reference and reuse JSON objects already defined in the CityJSON schemas.</p>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;extraAttributes&quot;</span><span class="o">:</span> <span class="p">{</span>
+  <span class="s2">&quot;Building&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;+colour&quot;</span><span class="o">:</span> <span class="p">{</span>
+      <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;properties&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;rgba&quot;</span><span class="o">:</span> <span class="p">{</span>
+          <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;items&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;number&quot;</span><span class="p">},</span>
+          <span class="s2">&quot;minItems&quot;</span><span class="o">:</span> <span class="mi">4</span><span class="p">,</span>
+          <span class="s2">&quot;maxItems&quot;</span><span class="o">:</span> <span class="mi">4</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">&quot;required&quot;</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;rgba&quot;</span><span class="p">],</span>
+      <span class="s2">&quot;additionalProperties&quot;</span><span class="o">:</span> <span class="kc">false</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;+area-parcel&quot;</span><span class="o">:</span> <span class="p">{</span>
+      <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;properties&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;number&quot;</span> <span class="p">},</span>
+        <span class="s2">&quot;uom&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;enum&quot;</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="s2">&quot;feet2&quot;</span><span class="p">]</span> <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">&quot;required&quot;</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;uom&quot;</span><span class="p">],</span>
+      <span class="s2">&quot;additionalProperties&quot;</span><span class="o">:</span> <span class="kc">false</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="creating-extending-new-city-objects">
+<h3><a class="toc-backref" href="#id25">2. Creating/extending new City Objects</a><a class="headerlink" href="#creating-extending-new-city-objects" title="Permalink to this headline">¶</a></h3>
+<p>The creation of a new City Object is done by defining it in the Extension file in the <code class="docutils literal notranslate"><span class="pre">&quot;extraCityObjects&quot;</span></code> property.
+Here’s an example:</p>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;extraCityObjects&quot;</span><span class="o">:</span> <span class="p">{</span>
+  <span class="s2">&quot;+NoiseBuilding&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;allOf&quot;</span><span class="o">:</span> <span class="p">[</span>
+      <span class="p">{</span> <span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;../cityobjects.json#/_AbstractBuilding&quot;</span> <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;properties&quot;</span><span class="o">:</span> <span class="p">{</span>
+          <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;enum&quot;</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;+NoiseBuilding&quot;</span><span class="p">]</span> <span class="p">},</span>
+          <span class="s2">&quot;toplevel&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;boolean&quot;</span><span class="p">},</span>
+          <span class="s2">&quot;attributes&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;properties&quot;</span><span class="o">:</span> <span class="p">{</span>
+              <span class="s2">&quot;buildingLDenMin&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;number&quot;</span><span class="p">}</span>
+            <span class="p">}</span>
+          <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;required&quot;</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+      <span class="p">}</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Since all City Objects are documented in the schemas of CityJSON (in <a class="reference external" href="https://github.com/tudelft3d/cityjson/tree/master/schema">cityobjects.json</a>), it is basically a matter of copying the parts needed in a new file and modifying its content.
+A new name for the City Object must be given and it must begin with <code class="docutils literal notranslate"><span class="pre">+</span></code>.</p>
+<p>Because City Objects can be of different levels (1st-level ones can exist by themselves; 2nd-level ones need to have a parent), we need to explicitly state this by using the property <code class="docutils literal notranslate"><span class="pre">&quot;toplevel&quot;</span></code>, which is a Boolean value.</p>
+<p>It should be observed that since JSON schemas do not allow inheritance, the only way to extend a City Object is to define an entirely new one (with a new name, eg <code class="docutils literal notranslate"><span class="pre">&quot;+NoiseBuilding&quot;</span></code>).
+This is done by copying the schema of the parent City Object and extending it.</p>
+<div class="admonition-rules-to-follow-to-define-new-city-objects admonition">
+<p class="first admonition-title">Rules to follow to define new City Objects</p>
+<p>The challenge is creating Extensions that will not break the software packages (viewers, spatial analysis, etc) that already read and process CityJSON files.
+While one could define a new City Object and document it, if this new object doesn’t follow the rules below then it will mean that new specific software needs to be built for it; this would go against the fundamental ideas behind CityJSON.</p>
+<blockquote class="last">
+<div><ol class="arabic simple">
+<li>The name of a new City Object must begin with a <code class="docutils literal notranslate"><span class="pre">+</span></code>, eg <code class="docutils literal notranslate"><span class="pre">&quot;+NoiseBuilding&quot;</span></code></li>
+<li>A new City Object must conform to the rules of CityJSON, ie it must contain a property <code class="docutils literal notranslate"><span class="pre">&quot;type&quot;</span></code> and one <code class="docutils literal notranslate"><span class="pre">&quot;geometry&quot;</span></code>. If the object contains appearances, the same mechanism should be used so that the new City Objects can be processed without modification.</li>
+<li>A new City Object must also contain the property <code class="docutils literal notranslate"><span class="pre">&quot;toplevel&quot;</span></code>, whose value is a Boolean (true = 1st-level; false = 2nd-level).</li>
+<li>All the geometries must be in the property <code class="docutils literal notranslate"><span class="pre">&quot;geometry&quot;</span></code>, and cannot be located somewhere else deep in a hierarchy of a new property. This ensures that all the code written to process, manipulate, and view CityJSON files (eg <a class="reference external" href="https://github.com/tudelft3d/cjio">cjio</a> and <a class="reference external" href="https://github.com/tudelft3d/azul">azul</a>) will be working without modifications.</li>
+<li>If a new City Object is contains other objects and requires different geometries (see below for an example), then a new City Object needs to be defined using the parent-children structure of CityJSON, as used by <code class="docutils literal notranslate"><span class="pre">&quot;Building&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;BuildingPart&quot;</span></code>.</li>
+<li>The reuse of types defined in CityJSON, eg <code class="docutils literal notranslate"><span class="pre">&quot;Solid&quot;</span></code> or semantic surfaces, is allowed.</li>
+<li>To define a new semantic surface, simply add a <code class="docutils literal notranslate"><span class="pre">+</span></code> to its name, eg <code class="docutils literal notranslate"><span class="pre">&quot;+ThermalSurface&quot;</span></code>.</li>
+</ol>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="adding-new-properties-at-the-root-of-a-document">
+<h3><a class="toc-backref" href="#id26">3. Adding new properties at the root of a document</a><a class="headerlink" href="#adding-new-properties-at-the-root-of-a-document" title="Permalink to this headline">¶</a></h3>
+<p>It is allowed to add a new property at the root of a CityJSON file, but if one wants to document it in a schema, then it needs to start with a <code class="docutils literal notranslate"><span class="pre">+</span></code>.
+Say we wanted to store some census data for a given neighbourhood for which we have a CityJSON file, then we could define the extra root property <code class="docutils literal notranslate"><span class="pre">&quot;+census&quot;</span></code> as follows:</p>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;extraRootProperties&quot;</span><span class="o">:</span> <span class="p">{</span>
+  <span class="s2">&quot;+census&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;properties&quot;</span><span class="o">:</span> <span class="p">{</span>
+      <span class="s2">&quot;percent_men&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;minimum&quot;</span><span class="o">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s2">&quot;maximum&quot;</span><span class="o">:</span> <span class="mf">100.0</span>
+      <span class="p">},</span>
+      <span class="s2">&quot;percent_women&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;minimum&quot;</span><span class="o">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s2">&quot;maximum&quot;</span><span class="o">:</span> <span class="mf">100.0</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>And a CityJSON file would look like this:</p>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;CityJSON&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;version&quot;</span><span class="o">:</span> <span class="s2">&quot;0.9&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;CityObjects&quot;</span><span class="o">:</span> <span class="p">{...},</span>
+  <span class="s2">&quot;vertices&quot;</span><span class="o">:</span> <span class="p">[...],</span>
+  <span class="s2">&quot;+census&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;percent_men&quot;</span><span class="o">:</span> <span class="mf">49.5</span><span class="p">,</span>
+    <span class="s2">&quot;percent_women&quot;</span><span class="o">:</span> <span class="mf">51.5</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="mapping-of-the-noise-ade-to-a-cityjson-extension">
+<h2><a class="toc-backref" href="#id27">Mapping of the Noise ADE to a CityJSON Extension</a><a class="headerlink" href="#mapping-of-the-noise-ade-to-a-cityjson-extension" title="Permalink to this headline">¶</a></h2>
+<p>To illustrate the process of creating a new CityJSON Extension, we use the Noise ADE, which is the example case in the <a class="reference external" href="https://portal.opengeospatial.org/files/?artifact_id=47842">CityGML 2.0 documentation</a> (Section 10.13.2 on p. 151 describes it; and Annex H on p. 305 gives more implementation details).
+The XSDs and some test datasets are available <a class="reference external" href="http://schemas.opengis.net/citygml/examples/2.0/ade/noise-ade/">here</a>.</p>
+<dl class="docutils">
+<dt>The resulting files for the Noise Extension are available:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference download internal" href="../_downloads/noise.json" download=""><code class="xref download docutils literal notranslate"><span class="pre">download</span> <span class="pre">noise.json</span></code></a></li>
+<li><a class="reference download internal" href="../_downloads/noise_data.json" download=""><code class="xref download docutils literal notranslate"><span class="pre">download</span> <span class="pre">noise_data.json</span></code></a></li>
+</ul>
+</dd>
+</dl>
+<div class="section" id="adding-new-attributes-to-buildings">
+<h3><a class="toc-backref" href="#id28">Adding new attributes to Buildings</a><a class="headerlink" href="#adding-new-attributes-to-buildings" title="Permalink to this headline">¶</a></h3>
+<a class="reference internal image-reference" href="../_images/noise_building.png"><img alt="../_images/noise_building.png" src="../_images/noise_building.png" style="width: 60%;" /></a>
+<p>We first need to define the new attributes and specify that they can be used for <code class="docutils literal notranslate"><span class="pre">&quot;Building&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;BuildingPart&quot;</span></code></p>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;definitions&quot;</span><span class="o">:</span> <span class="p">{</span>
+  <span class="s2">&quot;measure&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;properties&quot;</span><span class="o">:</span> <span class="p">{</span>
+      <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;number&quot;</span> <span class="p">},</span>
+      <span class="s2">&quot;uom&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;string&quot;</span> <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;required&quot;</span><span class="o">:</span> <span class="p">[</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;uom&quot;</span> <span class="p">],</span>
+    <span class="s2">&quot;additionalProperties&quot;</span><span class="o">:</span> <span class="s2">&quot;false&quot;</span>
+  <span class="p">}</span>
+<span class="p">},</span>
+<span class="s2">&quot;extraAttributes&quot;</span><span class="o">:</span> <span class="p">{</span>
+  <span class="s2">&quot;Building&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;+noise-buildingReflection&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;string&quot;</span> <span class="p">},</span>
+    <span class="s2">&quot;+noise-buildingReflectionCorrection&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;#/definitions/measure&quot;</span> <span class="p">},</span>
+    <span class="s2">&quot;+noise-buildingLDenMax&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;#/definitions/measure&quot;</span> <span class="p">},</span>
+    <span class="s2">&quot;+noise-buildingLDenMin&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;#/definitions/measure&quot;</span> <span class="p">},</span>
+    <span class="s2">&quot;+noise-buildingLDenEq&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;#/definitions/measure&quot;</span> <span class="p">},</span>
+    <span class="s2">&quot;+noise-buildingLNightMax&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;#/definitions/measure&quot;</span> <span class="p">},</span>
+    <span class="s2">&quot;+noise-buildingLNightMin&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;#/definitions/measure&quot;</span> <span class="p">},</span>
+    <span class="s2">&quot;+noise-buildingLNightEq&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;#/definitions/measure&quot;</span> <span class="p">},</span>
+    <span class="s2">&quot;+noise-buildingHabitants&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;integer&quot;</span> <span class="p">},</span>
+    <span class="s2">&quot;+noise-buildingAppartments&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;integer&quot;</span> <span class="p">},</span>
+    <span class="s2">&quot;+noise-buildingImmissionPoints&quot;</span><span class="o">:</span> <span class="p">{</span>
+      <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;items&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;integer&quot;</span> <span class="p">}</span> <span class="p">},</span>
+    <span class="s2">&quot;+noise-remark&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;string&quot;</span> <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="s2">&quot;BuildingPart&quot;</span><span class="o">:</span> <span class="p">{...}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A CityJSON file containing this new City Object would look like this:</p>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;CityJSON&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;version&quot;</span><span class="o">:</span> <span class="s2">&quot;0.9&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;extensions&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;Noise&quot;</span><span class="o">:</span> <span class="s2">&quot;https://someurl.org/noise.json&quot;</span>
+  <span class="p">},</span>
+  <span class="s2">&quot;CityObjects&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;1234&quot;</span><span class="o">:</span> <span class="p">{</span>
+      <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;Building&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;toplevel&quot;</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="s2">&quot;attributes&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;roofType&quot;</span><span class="o">:</span> <span class="s2">&quot;gable&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;+noise-buildingReflectionCorrection&quot;</span><span class="o">:</span> <span class="p">{</span>
+          <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="mf">4.123</span><span class="p">,</span>
+          <span class="s2">&quot;uom&quot;</span><span class="o">:</span> <span class="s2">&quot;dB&quot;</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;+noise-buildingLNightMax&quot;</span><span class="o">:</span> <span class="p">{</span>
+          <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="mf">43.123</span><span class="p">,</span>
+          <span class="s2">&quot;uom&quot;</span><span class="o">:</span> <span class="s2">&quot;dB&quot;</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">&quot;geometry&quot;</span><span class="o">:</span> <span class="p">[...]</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-complex-types-for-cityfurniture">
+<h3><a class="toc-backref" href="#id29">Adding complex types for CityFurniture</a><a class="headerlink" href="#adding-complex-types-for-cityfurniture" title="Permalink to this headline">¶</a></h3>
+<a class="reference internal image-reference" href="../_images/noise_cf.png"><img alt="../_images/noise_cf.png" src="../_images/noise_cf.png" style="width: 80%;" /></a>
+<p>As it can be seen in the UML diagram, extending <code class="docutils literal notranslate"><span class="pre">&quot;CityFurniture&quot;</span></code> is more challenging because not only new simple attributes need to be defined, but a <code class="docutils literal notranslate"><span class="pre">&quot;NoiseCityFurnitureSegment&quot;</span></code> object, which has its own geometry (a ‘gml:Curve’).</p>
+<p>The steps to follow are thus:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Create new City Object: <code class="docutils literal notranslate"><span class="pre">&quot;+NoiseCityFurnitureSegment&quot;</span></code></li>
+<li>Since <code class="docutils literal notranslate"><span class="pre">&quot;CityFurniture&quot;</span></code> is allowed to have <code class="docutils literal notranslate"><span class="pre">&quot;children&quot;</span></code> (all City Objects), we can reuse this to link a given <code class="docutils literal notranslate"><span class="pre">&quot;CityFurniture&quot;</span></code> to its children <code class="docutils literal notranslate"><span class="pre">&quot;+NoiseCityFurnitureSegment&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;+NoiseCityFurnitureSegment&quot;</span></code> is a new City Object and it gets the attributes common to all City Objects, and its geometry is restricted to a <code class="docutils literal notranslate"><span class="pre">&quot;MultiLineString&quot;</span></code>. It also gets one property <code class="docutils literal notranslate"><span class="pre">&quot;parent&quot;</span></code> which links to its parent <code class="docutils literal notranslate"><span class="pre">&quot;CityFurniture&quot;</span></code>.</li>
+</ol>
+</div></blockquote>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;+NoiseCityFurnitureSegment&quot;</span><span class="o">:</span> <span class="p">{</span>
+  <span class="s2">&quot;allOf&quot;</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">{</span> <span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;../cityobjects.json#/_AbstractCityObject&quot;</span><span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;properties&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;enum&quot;</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;+NoiseCityFurnitureSegment&quot;</span><span class="p">]</span> <span class="p">},</span>
+        <span class="s2">&quot;toplevel&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;boolean&quot;</span> <span class="p">},</span>
+        <span class="s2">&quot;attributes&quot;</span><span class="o">:</span> <span class="p">{</span>
+          <span class="s2">&quot;properties&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;reflection&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;string&quot;</span> <span class="p">},</span>
+            <span class="s2">&quot;reflectionCorrection&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;#/definitions/measure&quot;</span> <span class="p">},</span>
+            <span class="s2">&quot;height&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;#/definitions/measure&quot;</span> <span class="p">},</span>
+            <span class="s2">&quot;distance&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;#/definitions/measure&quot;</span> <span class="p">}</span>
+          <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;parent&quot;</span><span class="o">:</span> <span class="p">{</span>
+          <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;description&quot;</span><span class="o">:</span> <span class="s2">&quot;the ID of the children CityFurniture&quot;</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;geometry&quot;</span><span class="o">:</span> <span class="p">{</span>
+          <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;items&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;oneOf&quot;</span><span class="o">:</span> <span class="p">[</span>
+              <span class="p">{</span><span class="s2">&quot;$ref&quot;</span><span class="o">:</span> <span class="s2">&quot;../geomprimitives.json#/MultiLineString&quot;</span><span class="p">}</span>
+            <span class="p">]</span>
+          <span class="p">}</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">&quot;required&quot;</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;toplevel&quot;</span><span class="p">,</span> <span class="s2">&quot;parent&quot;</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;a_noisy_bench&quot;</span><span class="o">:</span> <span class="p">{</span>
+  <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;CityFurniture&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;geometry&quot;</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;Solid&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;toplevel&quot;</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="s2">&quot;lod&quot;</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span>
+      <span class="s2">&quot;boundaries&quot;</span><span class="o">:</span> <span class="p">[</span>
+        <span class="p">[</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">]]</span> <span class="p">]</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">],</span>
+  <span class="s2">&quot;children&quot;</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;thesegment_1&quot;</span><span class="p">,</span> <span class="s2">&quot;thesegment_2&quot;</span><span class="p">]</span>
+<span class="p">},</span>
+<span class="s2">&quot;thesegment_1&quot;</span><span class="o">:</span> <span class="p">{</span>
+  <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;+NoiseCityFurnitureSegment&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;geometry&quot;</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;MultiLineString&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;toplevel&quot;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+      <span class="s2">&quot;lod&quot;</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="s2">&quot;boundaries&quot;</span><span class="o">:</span> <span class="p">[</span>
+        <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">77</span><span class="p">,</span> <span class="mi">55</span><span class="p">,</span> <span class="mi">212</span><span class="p">]</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">],</span>
+  <span class="s2">&quot;parent&quot;</span><span class="o">:</span> <span class="s2">&quot;a_noisy_bench&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;attributes&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;reflectionCorrection&quot;</span><span class="o">:</span> <span class="mf">2.33</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="validation-of-files-containing-extensions">
+<h2><a class="toc-backref" href="#id30">Validation of files containing extensions</a><a class="headerlink" href="#validation-of-files-containing-extensions" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>The validation of a CityJSON file containing extensions needs to be performed as a 2-step operation:</dt>
+<dd><ol class="first last arabic simple">
+<li>The standard validation of all City Objects (except the new ones; those starting with <code class="docutils literal notranslate"><span class="pre">&quot;+&quot;</span></code> are ignored at this step);</li>
+<li>Each City Object defined in the Extensions is (individually) validated against its schema defined in the new schema file.</li>
+</ol>
+</dd>
+</dl>
+<p>While this could be done with any JSON schema validator, resolving all the JSON references could be slightly tricky.
+Thus, <a class="reference external" href="https://github.com/tudelft3d/cjio">cjio</a> (with the option <code class="docutils literal notranslate"><span class="pre">--validate</span></code>) has automated this process.
+You just need to add the new schemas in the folder <code class="docutils literal notranslate"><span class="pre">/extensions</span></code> in the <code class="docutils literal notranslate"><span class="pre">schema/v09/</span></code> folder; <code class="docutils literal notranslate"><span class="pre">noise.json</span></code> is already present in the <a class="reference external" href="https://github.com/tudelft3d/cityjson">GitHub repository of CityJSON</a>.
+Then specify the folder where the schemas are with the option <code class="docutils literal notranslate"><span class="pre">--folder_schemas</span></code>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ cjio noise_data.json validate --folder_schemas /home/elvis/cityjson/schema/v09/
+</pre></div>
+</div>
+<p>This assumes that the folder is structured as follows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<p><a href="#id4"><span class="problematic" id="id5">|</span></a>– appearance.schema.json
+<a href="#id6"><span class="problematic" id="id7">|</span></a>– cityjson.schema.json
+<a href="#id8"><span class="problematic" id="id9">|</span></a>– cityobjects.schema.json
+<a href="#id10"><span class="problematic" id="id11">|</span></a>– geomprimitives.schema.json
+<a href="#id12"><span class="problematic" id="id13">|</span></a>– geomtemplates.schema.json
+<a href="#id14"><span class="problematic" id="id15">|</span></a>– metadata.schema.json
+<a href="#id16"><span class="problematic" id="id17">|</span></a>– /extensions</p>
+<blockquote>
+<div><a href="#id18"><span class="problematic" id="id19">|</span></a>– noise.json
+<a href="#id20"><span class="problematic" id="id21">|</span></a>– other_extensions.json</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../">
+    <img class="logo" src="../_static/cityjson_logo.svg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">CityGML without the GML</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=tudelft3d&repo=cityjson&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../specs/">CityJSON specifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../schema/">Schema validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../software/">Software</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Extensions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#cityjson-extensions">CityJSON Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mapping-of-the-noise-ade-to-a-cityjson-extension">Mapping of the Noise ADE to a CityJSON Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validation-of-files-containing-extensions">Validation of files containing extensions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../citygmlsupport/">CityGML support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/">Example datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog/">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact/">Contact</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://github.com/tudelft3d/cityjson">GitHub repository</a></li>
+    
+    <li class="toctree-l1"><a href="https://github.com/tudelft3d/cjio">cjio (CityJSON/io)</a></li>
+    
+    <li class="toctree-l1"><a href="http://json.org">JSON homepage</a></li>
+    
+    <li class="toctree-l1"><a href="https://www.citygml.org">CityGML homepage</a></li>
+    
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search/" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, 3D geoinformation group at TU Delft.
+      
+      |
+      <a href="../_sources/extensions.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

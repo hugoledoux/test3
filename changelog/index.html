@@ -1,0 +1,267 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Changelog &#8212; CityJSON 0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="next" title="Contact" href="../contact/" />
+    <link rel="prev" title="Example datasets" href="../datasets/" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="unreleased-coming-in-the-future">
+<h2>[Unreleased - coming in the future]<a class="headerlink" href="#unreleased-coming-in-the-future" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>handling of very large files, eg for streaming (see <a class="reference external" href="https://github.com/tudelft3d/cityjson/issues/6">https://github.com/tudelft3d/cityjson/issues/6</a>)</li>
+<li>binary encoding of JSON, with either <a class="reference external" href="http://cbor.io">CBOR</a> or <a class="reference external" href="http://bsonspec.org">BSON</a></li>
+</ul>
+</div>
+<hr class="docutils" />
+<div class="section" id="id1">
+<h2>[0.9] - 2019-01-28<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="changed">
+<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>the <code class="docutils literal notranslate"><span class="pre">&quot;parent&quot;</span></code> property of City Objects is now named <code class="docutils literal notranslate"><span class="pre">&quot;parents&quot;:</span> <span class="pre">[]</span></code>, and is an array. This is to allow new City Objects in Extensions to have more than one parent; for the core objects this doesn’t change anything (except that the property must be renamed and put an array; cjio <code class="docutils literal notranslate"><span class="pre">upgrade_version()</span></code> takes care of this)</li>
+<li>the schemas have been revamped. The content is the same, but there are now abstract objects and city objects reuse these. It’s thus way easier to modify and update and understand the schemas</li>
+<li>the Extensions are not schemas files anymore, but JSON files with a specific syntax. The idea is the same, but now creating Extensions is simpler.</li>
+<li>Extensions now allow new attributes for already existing City Objects, ie it’s possible to add an attribute “+myattribute” to a “Building” and document it in a schema. Before it was only possible if one created a new specific City Object.</li>
+<li>Extensions now allow root properties to be added and documented.</li>
+<li>Transportation module now has LoD0 with MultiLineString geometries.</li>
+</ul>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="id2">
+<h2>[0.8] - 2018-09-24<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="added">
+<h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Extensions, aka ADEs in the CityGML world, are now supported. The page ‘Extensions’ explains how to create one (its schema), how to validate your data, etc.</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h3>Changed<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>introduction of a concept that was implicit but never mentioned: City Objects can be either of type ‘1st-level’ or ‘2nd-level’ (a Building would be 1st-level, and a BuildingPart 2nd-level). This concept is now for all City Object, including those that are defined in an Extension. This means that the properties “Parts” and “Installations” dissapear from the schema of Building/Bridge/Tunnel, and are replaced by a single one: “children”. Also, a child (2nd-level City Object) needs to have a link to its parent City Object (with “parent”).</li>
+<li>metadata/crs and metadata/bbox have been replaced by metadata/geographicReference and metadata/geographicExtent. Longer to type (file sizes will increase!), but ISO19115-compliant. Also, bbox-&gt;geographicExtent for each of the City Object too. cjio’s upgrade_version() takes care of all these automatically.</li>
+<li>metadata has more possibilities, it’s been extended to 3D city models needs. Some fields from the previous metadata properties were modified, be aware.</li>
+<li>Observe that the software cjio (<a class="reference external" href="https://github.com/tudelft3d/cjio">https://github.com/tudelft3d/cjio</a>) offers an option ‘–upgrade_version’ (from v0.6 –&gt; v0.8) that takes care of the changes above (except the metadata, you’ll need to adjust manually, sorry I am not coding all this). Simply run a v0.6 file and it’s upgraded.</li>
+</ul>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="id4">
+<h2>[0.6] - 2018-04-11<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id5">
+<h3>Added<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>support for Geometry Templates (aka Implicit Geometries)</li>
+<li>support for City Object Groups</li>
+<li>any members at the root of CityJSON are now allowed (but might be ignored by parser)</li>
+<li>each City Object can have a “bbox” member</li>
+</ul>
+</div>
+<div class="section" id="id6">
+<h3>Changed<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>the schema is now split into different schemas that are linked together</li>
+<li>the schema validator (software cjvalschema) is now in Python and improved, thus everyone can run it easily</li>
+<li>cjcompress does a better job and bugs have been removed</li>
+<li>textures are not forced to be in the folder ‘appearances’ anymore, any link to an image will do (useful for WFS for instance).</li>
+</ul>
+</div>
+</div>
+<div class="section" id="id7">
+<h2>[0.5] - 2017-11-14<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id8">
+<h3>Added<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>handling of <code class="docutils literal notranslate"><span class="pre">null</span></code> values at any level in a nested arrays is now supported in the schema</li>
+<li>CityGML module ‘Transportation’ added</li>
+<li>CityGML module ‘Bridge’ added, thus the 4 classes: Bridge, BridgePart, BridgeInstallation, and BridgeConstructionElement</li>
+<li>CityGML module ‘Tunnel’ added, thus the 4 classes: Tunnel, TunnelPart, and TunnelInstallation</li>
+</ul>
+</div>
+<div class="section" id="id9">
+<h3>Changed<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>the way semantics is stored for the surface is completely changed and breaks previous version</li>
+<li>material now can be per surface <code class="docutils literal notranslate"><span class="pre">&quot;values&quot;:</span> <span class="pre">[]</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;:</span> <span class="pre">2</span></code></li>
+</ul>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="id10">
+<h2>[0.3] - 2017-10-12<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id11">
+<h3>Added<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>utility cityjson-valschema now ensures that no two City Objects have the same ID/key</li>
+<li>the schema now has depths of Geometry Objects for “texture”, “material”, and “semantics” arrays.</li>
+<li>the schema and the validator are generally better</li>
+<li>clear use of null and empty {} where appropriate</li>
+</ul>
+</div>
+<div class="section" id="id12">
+<h3>Changed<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>change to “header” and versioning of the file</li>
+<li>&gt;1 textures and materials per geometry</li>
+</ul>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="id13">
+<h2>[0.2] - 2017-09-05<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id14">
+<h3>Added<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Semantics Objects, so that Semantic Surfaces have specific attributes</li>
+<li>software to validate the schema + other properties impossible represent with the schema, eg warning users of “soft” errors like attributes not in CityGML</li>
+</ul>
+</div>
+<div class="section" id="id15">
+<h3>Changed<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>metadata now ISO19115 compliant 💥</li>
+<li>materials now use X3D mechanism, same as CityGML</li>
+<li>textures now use COLLADA mechanism, same as CityGML</li>
+<li>improved greatly the schema (more is validated)</li>
+</ul>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="id16">
+<h2>[0.1] - 2017-08-01<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id17">
+<h3>Added<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>first beta release of CityJSON</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../">
+    <img class="logo" src="../_static/cityjson_logo.svg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">CityGML without the GML</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=tudelft3d&repo=cityjson&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../specs/">CityJSON specifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../schema/">Schema validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../software/">Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../extensions/">Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citygmlsupport/">CityGML support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/">Example datasets</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased-coming-in-the-future">[Unreleased - coming in the future]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">[0.9] - 2019-01-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">[0.8] - 2018-09-24</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">[0.6] - 2018-04-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">[0.5] - 2017-11-14</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id10">[0.3] - 2017-10-12</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id13">[0.2] - 2017-09-05</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id16">[0.1] - 2017-08-01</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contact/">Contact</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://github.com/tudelft3d/cityjson">GitHub repository</a></li>
+    
+    <li class="toctree-l1"><a href="https://github.com/tudelft3d/cjio">cjio (CityJSON/io)</a></li>
+    
+    <li class="toctree-l1"><a href="http://json.org">JSON homepage</a></li>
+    
+    <li class="toctree-l1"><a href="https://www.citygml.org">CityGML homepage</a></li>
+    
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search/" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, 3D geoinformation group at TU Delft.
+      
+      |
+      <a href="../_sources/changelog.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
