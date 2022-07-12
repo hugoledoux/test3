@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Comparison of interpolation methods | Open book</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Comparison of interpolation methods" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="An open book" />
+<meta property="og:description" content="An open book" />
+<link rel="canonical" href="http://localhost:4000/extra/interpol/" />
+<meta property="og:url" content="http://localhost:4000/extra/interpol/" />
+<meta property="og:site_name" content="Open book" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Comparison of interpolation methods" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"An open book","headline":"Comparison of interpolation methods","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"http://localhost:4000/assets/img/logo.png"}},"url":"http://localhost:4000/extra/interpol/"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <!-- <h1><a href="http://localhost:4000/">Open book</a></h1> -->
+
+        
+          <img src="/assets/img/logo.png" alt="Logo" />
+        
+
+        <!-- <p>An open book</p> -->
+
+        
+        <ul class="downloads">
+          <li><a href="https://github.com/tudelft3d/terrainbook/releases/download/0.8.0/terrainbook.pdf">download <strong>latest PDF</strong></a></li>
+          <li><a href="https://github.com/tudelft3d/terrainbook">LaTeX <strong>source</strong></a></li>
+          <li><a href="https://3d.bk.tudelft.nl/courses/geo1015/">course <strong>website</strong></a></li>
+        </ul>
+        
+      </header>
+      <section>
+
+      <h2 id="comparison-of-interpolation-methods">Comparison of interpolation methods</h2>
+
+<p><a href="./interpol_comparison.zip"><i class="fa fa-download"></i> interpol_comparison.zip</a> (use QGIS3 and open the project file <code class="language-plaintext highlighter-rouge">interpol_comparison.qgz</code>)</p>
+
+<p>The original samples are in the CSV file <code class="language-plaintext highlighter-rouge">samples.xyz</code>, a real gridded terrain in Tasmania (Australia) was randomly sampled with points that are far from each other.</p>
+
+<p>Then, to ensure that no artefacts are created at the border of the dataset, an area in the middle of that dataset was chosen to perform interpolation with different methods.</p>
+
+<p><img src="./overview.jpg" alt="" /></p>
+
+<p>All methods were used exactly at the same locations (centre of pixels).
+The output files contain the name of the method, and eventually the parameters used.
+The interpolation methods used are:</p>
+
+<ol>
+  <li><strong>IDW</strong>: (inverse distance to a power); <code class="language-plaintext highlighter-rouge">r1500</code> == radius of 1500units; <code class="language-plaintext highlighter-rouge">n10</code> == 10 closest neighbours; <code class="language-plaintext highlighter-rouge">p2</code> == power of2</li>
+  <li><strong>laplace</strong></li>
+  <li><strong>nn</strong>: nearest neighbour</li>
+  <li><strong>nni</strong>: natural neighbour (linear version)</li>
+  <li><strong>nni_c1</strong>: natural neighbour (C^1)</li>
+  <li><strong>tin</strong>: linear interpolation in a (Delaunay) TIN</li>
+  <li><strong>tin</strong>: C^1 interpolant in a (Delaunay) TIN</li>
+</ol>
+
+<p>The best way to visualise the results is to use the plugin <a href="https://qgis2threejs.readthedocs.io/en/docs/">qgis2threejs</a> and use the 3D view as an alternative for the QGIS3 3D-view, it is far more stable and robust for me.
+You can zoom in/out, and select interactively which datasets to display.</p>
+
+<p><img src="./qgis.gif" alt="" /></p>
+
+
+      </section>
+      <footer>
+        
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="/assets/js/scale.fix.js"></script>
+  </body>
+</html>
